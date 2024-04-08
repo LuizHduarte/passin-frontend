@@ -6,19 +6,36 @@ import { TableCell } from './table/table-cell'
 import { TableRow } from './table/table-row'
 import { SubSection } from './table/sub-section'
 import { CheckBox } from './table/check-box'
-import { attendees } from '../data/attendees'
 import dayjs from 'dayjs'
 import 'dayjs/locale/pt-br'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 dayjs.extend(relativeTime)
 dayjs.locale('pt-br')
 
 
+interface IAttendee{
+    id: string,
+    name: string,
+    email: string,
+    createdAt: string,
+    checkedInAt: string | null
+}
+
 export function AttendeeList() {
 
+    const [page, setPage] = useState(1)
+    const [attendees, setAttendees] = useState<IAttendee[]>([])
     const totalPages = Math.ceil(attendees.length / 10)
+
+    useEffect(() => {
+        fetch('http://localhost:3333/events/id/')
+        .then(response => response.json())
+        .then(data =>{
+            setAttendees(data.attendees)
+        })
+    },[page])
 
     function goToNextPage() {
         setPage(page + 1)
@@ -35,8 +52,6 @@ export function AttendeeList() {
     function goToLastPage() {
         setPage(totalPages)
     }
-
-    const [page, setPage] = useState(1)
 
     return (
         <div className='flex flex-col gap-4'>
@@ -70,7 +85,11 @@ export function AttendeeList() {
                                     </div>
                                 </TableCell>
                                 <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
-                                <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
+                                <TableCell>
+                                    {attendee.checkedInAt === null 
+                                    ? <span className='text-zinc-500'>Não fez checkin</span>  
+                                    : dayjs().to(attendee.checkedInAt)}
+                                    </TableCell>
                                 <TableCell >
                                     <Iconbutton transparent={true}>
                                         <MoreHorizontal />
